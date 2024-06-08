@@ -1,2 +1,2 @@
-# javascript-filters
-Personal script to filter array and objects locally. For personal, volunteering and business projects.
+# scroll-helpers
+Personal scripts for UI UX friendly scrolls. For personal, volunteering and business projects.
