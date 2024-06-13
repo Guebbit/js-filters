@@ -1,17 +1,26 @@
 {
-  "name": "@guebbit/mouse-parallax",
+  "name": "@guebbit/js-filters",
   "version": "1.0.0",
   "license": "AGPLv3.0",
+  "main": "dist/index.js",
+  "types": "types/index.d.ts",
+  "files": [
+    "dist",
+    "types",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG"
+  ],
   "sideEffects": false,
   "scripts": {
-    "doc": "",
     "build": "tsc",
     "test": "jest",
+    "test:target": "jest /tests/filename.test.ts",
     "lint": "eslint \"*/**/*.{ts,js,json}\"",
     "lint:fix": "eslint \"*/**/*.{ts,js,json}\" --fix",
-    "docs:dev": "vitepress dev --port 8080",
-    "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview",
+    "docs:dev": "vitepress dev docs --port 8080",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "prepublish": "npm run build && npm run test && npm run lint && npm run docs:build",
     "publish:public": "npm run prepublish && npm publish --access public"
   },
@@ -20,6 +29,7 @@
     "@commitlint/config-conventional": "^19.2.2",
     "@types/eslint": "^8.56.10",
     "@types/jest": "^29.5.12",
+    "@types/lodash": "^4.17.5",
     "@types/node": "^20.13.0",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.11.0",
@@ -44,6 +54,7 @@
     }
   },
   "dependencies": {
+    "@guebbit/js-toolkit": "^1.0.3",
     "lodash": "^4.17.21"
   }
 }

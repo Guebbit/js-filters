@@ -1,7 +1,6 @@
-import { filter } from '../../src';
+import { filter } from '../src';
 
 // --------------------- AND LOGIC---------------------
-
 describe("(filter) [AND logic] Generic filter values against values - All checks must be TRUE", () => {
   test("[AND] match 2 identical ARRAYS", () =>
     expect(

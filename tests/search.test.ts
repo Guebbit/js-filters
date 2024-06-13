@@ -1,4 +1,4 @@
-import { search } from '../../src';
+import search from '../src';
 
 const input = [
   {

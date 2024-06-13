@@ -1,30 +1,105 @@
-import type { numberRuleType } from "../../index";
-export interface filterRuleParameter {
+/**
+ * Logic gates
+ *
+ * AND: ALL checks must be true
+ * OR: AT LEAST ONE check must be true
+ * Nand: AT LEAST ONE check must be false
+ * Nor: ALL checks must be false
+ *
+ * Xor, Xnor, Not and Buffer are not implemented
+ */
+export type ILogicGates = "and" | "AND" | "or" | "OR" | "nand" | "NAND" | "nor" | "NOR";
+/**
+ * Logic rule
+ *
+ * gt: greater than
+ * lt: lesser than
+ * egt: equal or greater than
+ * elt: equal or lesser than
+ * eq: equal as
+ */
+export type INumberRule = "gt" | "lt" | "egt" | "elt" | "eq";
+/**
+ * Filter item for search
+ */
+export interface IFilterRules {
+    /**
+     * Only for user identification if needed
+     */
+    id?: string;
+    /**
+     * Array of parameters to search from, if empty = get all parameters of records
+     */
+    search: unknown | unknown[];
+    /**
+     * list of parameters to search from
+     */
+    searchParams: string | string[];
+    /**
+     * Logic gate
+     */
+    logic?: ILogicGates;
+    /**
+     * case-sensitive or not
+     */
     sensitive?: boolean;
+    /**
+     * MAX levenshtein distance
+     *
+     * -2: They can be substring one of another
+     * -1: {toCheck} can be substring of {toMatch}
+     * 0: then they must be the same (default), better for array calculations
+     * 1+: maximum distance to be accepted
+     */
     distance?: number;
-    numberRule?: numberRuleType;
+    /**
+     * Disable filter if {search} is string and has less length than stringLimit
+     * default: no limit
+     */
+    stringLimit?: number;
+    /**
+     * If false, filter is not allowed to be empty
+     * ({search} empty array or empty string)
+     * then it's disabled
+     *
+     * If true and filter is empty: it will filter out everything
+     *
+     * Default: false
+     */
+    allowEmpty?: boolean;
+    /**
+     * Number
+     * gt: greater than (>)
+     * lt: less than (<)
+     * egt equal greater than (>=)
+     * elt: equal less than (<=)
+     * eq: equal (===)
+     */
+    numberRule?: INumberRule;
 }
 /**
- * Check if {match} is > < = than {check}
+ * Group IFilterRules with theirs logic gate
+ */
+export interface IFilterGroup {
+    rules: IFilterRules[];
+    logic?: ILogicGates;
+}
+/**
+ * A function for custom filter, use in native [].filter
+ */
+export type IFilterFunction = (arg: unknown) => boolean;
+/**
+ * ALl together, for better use
+ */
+export type IFilterAny = IFilterRules | IFilterGroup | IFilterFunction;
+/**
  *
- * @param {number} check
- * @param {number} match
- * @param {string} rule
  */
-export declare function filterCheckNumberRule(check: number, match: number, rule?: numberRuleType): boolean;
-/**
- * Fast array search
- * ALL values checked must be true
- */
-export declare function filterAnd(toCheck?: unknown | unknown[], toMatch?: unknown | unknown[], { sensitive, distance, numberRule, }?: filterRuleParameter): boolean;
-/**
- * At least 1 of all the values checked must be true
- * Searching for successes and returning true at the first
- * Reaaching the end and returning false (no success)
- */
-export declare function filterOr(toCheck?: unknown | unknown[], toMatch?: unknown | unknown[], { sensitive, distance, numberRule, }?: filterRuleParameter): boolean;
-export declare function filterNand(): boolean;
-export declare function filterNor(): boolean;
+export interface IFilterParameterRules {
+    sensitive?: boolean;
+    distance?: number;
+    numberRule?: INumberRule;
+}
 /**
  * Check 2 values: 1-way search so {toCheck} and {toMatch} are NOT the same and order is important.
  * They can be string or array, need to check every combination and apply the chosen logic
@@ -45,6 +120,6 @@ export declare function filterNor(): boolean;
  *  1+: maximum distance to be accepted
  * @param {string} rules.numberRule - {toCheck} greater\less than {toMatch}
  */
-declare const _default: (toCheck?: unknown | unknown[], toMatch?: unknown | unknown[], logic?: logicGatesType, rules?: filterRuleParameter) => boolean;
+declare const _default: (toCheck?: unknown | unknown[], toMatch?: unknown | unknown[], logic?: ILogicGates, rules?: IFilterParameterRules) => boolean;
 export default _default;
 //# sourceMappingURL=filter.d.ts.map

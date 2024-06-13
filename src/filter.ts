@@ -1,109 +1,112 @@
-import { match } from "../../index"
-import type { logicGatesType, numberRuleType } from "../../index";
+import { filterAnd, filterOr, filterNand, filterNor } from './';
 
-export interface filterRuleParameter {
+/**
+ * Logic gates
+ *
+ * AND: ALL checks must be true
+ * OR: AT LEAST ONE check must be true
+ * Nand: AT LEAST ONE check must be false
+ * Nor: ALL checks must be false
+ *
+ * Xor, Xnor, Not and Buffer are not implemented
+ */
+export type ILogicGates = "and" | "AND" | "or" | "OR" | "nand" | "NAND" | "nor" | "NOR";
+
+/**
+ * Logic rule
+ *
+ * gt: greater than
+ * lt: lesser than
+ * egt: equal or greater than
+ * elt: equal or lesser than
+ * eq: equal as
+ */
+export type INumberRule = "gt" | "lt" | "egt" | "elt" | "eq";
+
+/**
+ * Filter item for search
+ */
+export interface IFilterRules {
+  /**
+   * Only for user identification if needed
+   */
+  id?: string
+  /**
+   * Array of parameters to search from, if empty = get all parameters of records
+   */
+  search: unknown | unknown[]
+  /**
+   * list of parameters to search from
+   */
+  searchParams: string | string[]
+  /**
+   * Logic gate
+   */
+  logic?: ILogicGates,
+  /**
+   * case-sensitive or not
+   */
+  sensitive?: boolean
+  /**
+   * MAX levenshtein distance
+   *
+   * -2: They can be substring one of another
+   * -1: {toCheck} can be substring of {toMatch}
+   * 0: then they must be the same (default), better for array calculations
+   * 1+: maximum distance to be accepted
+   */
+  distance?: number
+  /**
+   * Disable filter if {search} is string and has less length than stringLimit
+   * default: no limit
+   */
+  stringLimit?: number
+  /**
+   * If false, filter is not allowed to be empty
+   * ({search} empty array or empty string)
+   * then it's disabled
+   *
+   * If true and filter is empty: it will filter out everything
+   *
+   * Default: false
+   */
+  allowEmpty?: boolean
+  /**
+   * Number
+   * gt: greater than (>)
+   * lt: less than (<)
+   * egt equal greater than (>=)
+   * elt: equal less than (<=)
+   * eq: equal (===)
+   */
+  numberRule?: INumberRule
+}
+
+/**
+ * Group IFilterRules with theirs logic gate
+ */
+export interface IFilterGroup {
+  rules: IFilterRules[],
+  logic?: ILogicGates
+}
+
+/**
+ * A function for custom filter, use in native [].filter
+ */
+export type IFilterFunction = (arg: unknown) => boolean;
+
+/**
+ * ALl together, for better use
+ */
+export type IFilterAny = IFilterRules | IFilterGroup | IFilterFunction;
+
+/**
+ *
+ */
+export interface IFilterParameterRules {
   sensitive?: boolean
   distance?: number
-  numberRule?: numberRuleType
-}
-
-/**
- * Check if {match} is > < = than {check}
- *
- * @param {number} check
- * @param {number} match
- * @param {string} rule
- */
-export function filterCheckNumberRule(check :number, match :number, rule :numberRuleType = "eq") :boolean {
-  switch (rule) {
-    case "gt":
-      return match > check;
-    case "lt":
-      return match < check;
-    case "egt":
-      return match >= check;
-    case "elt":
-      return match <= check;
-    case "eq":
-      return match === check;
-  }
-  return false;
-}
-
-/**
- * Fast array search
- * ALL values checked must be true
- */
-export function filterAnd(toCheck :unknown | unknown[] = [], toMatch :unknown | unknown[] = [], {
-  sensitive = false,
-  distance = 0,
-  numberRule,
-}: filterRuleParameter = {}){
-  // distance = 0 insensitive: (1-way) fast array search: if both are arrays and distance is less than 1 (distance is indifferent in these cases)
-  if(Array.isArray(toCheck) && Array.isArray(toMatch) && distance === 0 && !sensitive)
-    // all elements of the {toCheck} array must be present in the {toMatch} array
-    return toCheck.every((s) => toMatch.includes(s));
-  // normal filter:
-  const checkArray = Array.isArray(toCheck) ? toCheck : [toCheck];
-  const matchArray = Array.isArray(toMatch) ? toMatch : [toMatch];
-  // check every interaction of {toCheck} with every interaction of {toMatch} ????
-  for(let i = matchArray.length; i--; )
-    for(let k = checkArray.length; k--; )
-      // check strings with case sensitivity and distance and the other values with direct check
-      // if even one is false, the final result is false
-      if(typeof checkArray[k] === "string" && typeof matchArray[i] === "string"){
-        if(!match(checkArray[k], matchArray[i], sensitive, distance))
-          return false;
-      }else{
-        // no numberRule, regular straight check
-        if(!numberRule && checkArray[k] !== matchArray[i])
-          return false;
-        // if number rule
-        if(numberRule && !filterCheckNumberRule(checkArray[k], matchArray[i], numberRule))
-          return false;
-      }
-  // if everything went well
-  return true;
-}
-
-/**
- * At least 1 of all the values checked must be true
- * Searching for successes and returning true at the first
- * Reaaching the end and returning false (no success)
- */
-export function filterOr(toCheck :unknown | unknown[] = [], toMatch :unknown | unknown[] = [], {
-  sensitive = false,
-  distance = 0,
-  numberRule,
-}: filterRuleParameter = {}
-) {
-  // (2-way) fast array search
-  if(Array.isArray(toCheck) && Array.isArray(toMatch) && distance === 0 && !sensitive)
-    // Just 1 element of the array must be in common
-    return toMatch.some((s) => toCheck.includes(s)) || toCheck.some((s) => toMatch.includes(s));
-  const checkArray = Array.isArray(toCheck) ? toCheck : [toCheck];
-  const matchArray = Array.isArray(toMatch) ? toMatch : [toMatch];
-  for(let i = matchArray.length; i--; )
-    for(let k = checkArray.length; k--; )
-      // at least 1 must be true
-      if(typeof checkArray[k] === "string" && typeof matchArray[i] === "string"){
-        if(match(checkArray[k], matchArray[i], sensitive, distance))
-          return true;
-      }else{
-        if(!numberRule && checkArray[k] === matchArray[i])
-          return true;
-        if(numberRule && filterCheckNumberRule(checkArray[k], matchArray[i], numberRule))
-          return true;
-      }
-  // if no successes were found
-  return false;
-}
-
-export function filterNand(){
-  return true;
-}
-export function filterNor(){
-  return true;
+  numberRule?: INumberRule
 }
 
 /**
@@ -126,18 +129,16 @@ export function filterNor(){
  *  1+: maximum distance to be accepted
  * @param {string} rules.numberRule - {toCheck} greater\less than {toMatch}
  */
-export default (toCheck :unknown | unknown[] = [], toMatch :unknown | unknown[] = [], logic :logicGatesType = "and", rules ?:filterRuleParameter) :boolean => {
+export default (toCheck :unknown | unknown[] = [], toMatch :unknown | unknown[] = [], logic :ILogicGates = "and", rules ?:IFilterParameterRules) :boolean => {
   switch (logic.toLowerCase()){
     case "and":
       return filterAnd(toCheck, toMatch, rules);
     case "or":
       return filterOr(toCheck, toMatch, rules);
     case "nand":
-      // TODO
-      return filterNand();
+      return filterNand(toCheck, toMatch, rules);
     case "nor":
-      // TODO
-      return filterNor();
+      return filterNor(toCheck, toMatch, rules);
   }
   // wrong logic inserted
   return false;
